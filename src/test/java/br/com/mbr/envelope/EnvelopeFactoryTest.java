@@ -80,6 +80,8 @@ class EnvelopeFactoryTest {
         assertNull(proximo.trace().get(1).schemaValidation());
 
         EnvelopeFactory.validarParaCertificacao(proximo);
+        EnvelopeFactory.validarTraceParaCertificacao(proximo.trace());
+        assertEquals(2, EnvelopeFactory.contextoLog(proximo).stepAtual());
         assertThrows(EnvelopeException.class, () -> EnvelopeFactory.extrairData(proximo));
         assertEquals("v", EnvelopeFactory.extrairData(envCertificado).get("k"));
     }

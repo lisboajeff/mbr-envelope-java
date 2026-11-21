@@ -88,7 +88,13 @@ public final class EnvelopeFactory {
         if (envelope == null) {
             throw new EnvelopeException("Envelope obrigatorio");
         }
-        List<TraceStep> steps = envelope.trace();
+        validarTraceParaCertificacao(envelope.trace());
+    }
+
+    public static void validarTraceParaCertificacao(List<TraceStep> steps) {
+        if (steps == null || steps.isEmpty()) {
+            throw new EnvelopeException("trace deve conter pelo menos 1 step");
+        }
         for (int i = 0; i < steps.size() - 1; i++) {
             TraceStep s = steps.get(i);
             if (s.schemaValidation() == null || !s.schemaValidation().validated()) {
@@ -99,6 +105,20 @@ public final class EnvelopeFactory {
         if (ultimo.schemaValidation() != null) {
             throw new EnvelopeException("Ultimo step " + ultimo.step() + " nao pode estar pre-certificado");
         }
+    }
+
+    public static ContextoLogEnvelope contextoLog(Envelope<?> envelope) {
+        if (envelope == null) {
+            throw new EnvelopeException("Envelope obrigatorio");
+        }
+        return new ContextoLogEnvelope(
+                envelope.eventId(),
+                envelope.processInstanceId(),
+                envelope.metadata().topic(),
+                envelope.metadata().schemaName(),
+                envelope.metadata().schemaVersion(),
+                envelope.trace().getLast().step()
+        );
     }
 
     public static void validarCertificado(Envelope<?> envelope) {
