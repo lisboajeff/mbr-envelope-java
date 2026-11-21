@@ -23,7 +23,7 @@ jobs:
           distribution: "temurin"
           server-id: github
           server-username: ${{ github.actor }}
-          server-password: ${{ secrets.GITHUB_TOKEN }}
+          server-password: GITHUB_TOKEN
 
       - name: Test, PMD & Deploy to GitHub Packages
         run: ./mvnw -B test pmd:check deploy
