@@ -84,6 +84,39 @@ public final class EnvelopeFactory {
         );
     }
 
+    public static void validarParaCertificacao(Envelope<?> envelope) {
+        if (envelope == null) {
+            throw new EnvelopeException("Envelope obrigatorio");
+        }
+        List<TraceStep> steps = envelope.trace();
+        for (int i = 0; i < steps.size() - 1; i++) {
+            TraceStep s = steps.get(i);
+            if (s.schemaValidation() == null || !s.schemaValidation().validated()) {
+                throw new EnvelopeException("Step anterior " + s.step() + " sem certificacao");
+            }
+        }
+        TraceStep ultimo = steps.getLast();
+        if (ultimo.schemaValidation() != null) {
+            throw new EnvelopeException("Ultimo step " + ultimo.step() + " nao pode estar pre-certificado");
+        }
+    }
+
+    public static void validarCertificado(Envelope<?> envelope) {
+        if (envelope == null) {
+            throw new EnvelopeException("Envelope obrigatorio");
+        }
+        for (TraceStep s : envelope.trace()) {
+            if (s.schemaValidation() == null || !s.schemaValidation().validated()) {
+                throw new EnvelopeException("Step " + s.step() + " nao esta certificado");
+            }
+        }
+    }
+
+    public static <T> T extrairData(Envelope<T> envelope) {
+        validarCertificado(envelope);
+        return envelope.data();
+    }
+
     private static String validarTexto(String valor, String campo) {
         if (valor == null || valor.isBlank()) {
             throw new EnvelopeException("Campo obrigatorio ausente ou vazio: " + campo);
