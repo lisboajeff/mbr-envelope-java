@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 public record Envelope<T>(
         @JsonProperty("event_id") UUID eventId,
@@ -22,5 +23,12 @@ public record Envelope<T>(
             throw new EnvelopeException("trace deve conter pelo menos 1 step");
         }
         trace = List.copyOf(trace);
+    }
+
+    public <U> Envelope<U> mapData(Function<T, U> mapper) {
+        if (mapper == null) {
+            throw new EnvelopeException("Mapper obrigatorio");
+        }
+        return new Envelope<>(eventId, processInstanceId, timestamp, metadata, trace, mapper.apply(data));
     }
 }

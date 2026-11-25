@@ -137,6 +137,44 @@ public final class EnvelopeFactory {
         return envelope.data();
     }
 
+    public static <T> Envelope<T> certificarUltimoStep(
+            Envelope<T> envelope,
+            String validatorServiceName,
+            String validatorProcessId
+    ) {
+        validarParaCertificacao(envelope);
+        String serviceName = validarTexto(validatorServiceName, "schema_validation.validator_service_name");
+        String processId = validarTexto(validatorProcessId, "schema_validation.validator_process_id");
+
+        List<TraceStep> novoTrace = new ArrayList<>(envelope.trace());
+        TraceStep ultimo = novoTrace.getLast();
+        SchemaValidation validacao = new SchemaValidation(
+                true,
+                envelope.metadata().schemaName(),
+                envelope.metadata().schemaVersion(),
+                Instant.now(),
+                serviceName,
+                processId
+        );
+        novoTrace.set(novoTrace.size() - 1, new TraceStep(
+                ultimo.step(),
+                ultimo.spanId(),
+                ultimo.serviceName(),
+                ultimo.processId(),
+                ultimo.executedAt(),
+                ultimo.responsibility(),
+                validacao
+        ));
+        return new Envelope<>(
+                envelope.eventId(),
+                envelope.processInstanceId(),
+                envelope.timestamp(),
+                envelope.metadata(),
+                novoTrace,
+                envelope.data()
+        );
+    }
+
     private static String validarTexto(String valor, String campo) {
         if (valor == null || valor.isBlank()) {
             throw new EnvelopeException("Campo obrigatorio ausente ou vazio: " + campo);

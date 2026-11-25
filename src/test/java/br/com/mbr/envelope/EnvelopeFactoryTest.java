@@ -85,4 +85,22 @@ class EnvelopeFactoryTest {
         assertThrows(EnvelopeException.class, () -> EnvelopeFactory.extrairData(proximo));
         assertEquals("v", EnvelopeFactory.extrairData(envCertificado).get("k"));
     }
+
+    @Test
+    void emitterDeveIniciarCertificarEAvancarComDestinoEMapData() {
+        EnvelopeEmitter emitter = new EnvelopeEmitter("ativos.extrator", "pod-1");
+        EnvelopeDestino d1 = new EnvelopeDestino("topic.a", "s1", "1.0.0");
+        EnvelopeDestino d2 = new EnvelopeDestino("topic.b", "s2", "1.0.0");
+
+        Envelope<Map<String, Object>> env = emitter.iniciar(d1, "iniciar", Map.of("k", "v"));
+        Envelope<Map<String, Object>> cert = EnvelopeFactory.certificarUltimoStep(
+                env, "infraestrutura.validador-central", "val-1"
+        );
+        Envelope<Map<String, Object>> prox = emitter.avancar(cert, d2, "avancar", Map.of("n", 42));
+        Envelope<String> mapeado = prox.mapData(m -> String.valueOf(m.get("n")));
+
+        assertEquals(2, prox.trace().size());
+        assertEquals("ativos.extrator", prox.trace().get(1).serviceName());
+        assertEquals("42", mapeado.data());
+    }
 }
